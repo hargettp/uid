@@ -26,6 +26,7 @@ import Control.Applicative (pure)
 import Control.Exception
 
 import Data.Aeson
+import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
 import Data.Char (toLower,toUpper)
 import Data.Maybe
@@ -41,13 +42,13 @@ A new, randomly generated identifier
 data UID = UID UUID deriving (Eq,Typeable)
 
 instance Serialize UID where
-  put (UID uuid) = do 
+  put (UID uuid) = do
     put $ toByteString uuid
-    
+
   get = do
     bs <- getByteString 16 -- size of UUID representation
-    return $ UID $ fromJust $ fromByteString $ BL.fromStrict bs
-    
+    return $ UID $ fromJust $ fromByteString $ fromStrict bs
+
 {- |
 Convert the 'UID' into a base32 'String' representation'.
 -}
@@ -76,12 +77,12 @@ fromBase32 s = let extended = map toUpper $ s ++ (replicate paddingSize '=')
                   then fromJust bs
                   else throw $ InvalidUIDException s
 
-instance Show UID where    
+instance Show UID where
   show u = "UID " ++ toBase32 u
-  
+
 instance ToJSON UID where  
   toJSON u = String $  pack $ toBase32 u
-  
+
 instance FromJSON UID where  
   parseJSON = withText "Base32" $ pure . fromBase32 . unpack
 
@@ -92,12 +93,16 @@ newUID :: IO UID
 newUID = do
   uuid <- nextRandom
   return $ UID uuid
-  
-  
+
 {- |  
 Construct a new identifier and immediately convert to its base32 representation using 'toBase32'
 -}
-newUIDString :: IO String  
+newUIDString :: IO String
 newUIDString = do
   uid <- newUID
   return $ toBase32 uid
+
+-- ByteString utilities
+
+fromStrict :: B.ByteString -> BL.ByteString
+fromStrict bs = BL.fromChunks [bs]
