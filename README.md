@@ -1,6 +1,8 @@
 uid
 ===
 
+[![Build Status](https://travis-ci.org/hargettp/uid.svg?branch=master)](https://travis-ci.org/hargettp/uid)
+
 Simple unique identifier datatype, serializable and encodable as base32.
 
 TODO
